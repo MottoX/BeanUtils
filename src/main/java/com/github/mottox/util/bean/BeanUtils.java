@@ -1,4 +1,4 @@
-package com.github.mottox.bean;
+package com.github.mottox.util.bean;
 
 import java.util.Map;
 import java.util.Objects;
