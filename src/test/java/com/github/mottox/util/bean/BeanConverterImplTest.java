@@ -6,42 +6,65 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * JUnit test for {@link BeanUtils}.
+ * JUnit test for {@link BeanConverterImpl}.
  *
  * @author Robin Wang
  */
-public class BeanUtilsTest {
+public class BeanConverterImplTest {
 
     @Test
     public void testCopyProperties() throws Exception {
         SourceBean source = new SourceBean("Peter", 34, Gender.MALE, 1.85, BigDecimal.valueOf(123456789.87654321));
-        TargetBean target = new TargetBean("Lisa", 26, Gender.FEMALE, 1.64, BigDecimal.valueOf(321.123));
 
-        BeanUtils.copyProperties(source, target);
+        TargetBean target = new TargetBean();
+
+        BeanConverter converter = BeanConverterBuilder.create()
+                .registerConverter((TypeConverter<Gender, Integer>) Gender::getValue)
+                .registerConverter((TypeConverter<Double, BigDecimal>) BigDecimal::valueOf)
+                .registerConverter((TypeConverter<BigDecimal, String>) BigDecimal::toPlainString)
+                .build();
+
+        converter.copyProperties(source, target);
 
         Assert.assertEquals(source.name, target.name);
-        Assert.assertEquals(source.age, target.age);
-        Assert.assertEquals(source.gender, target.gender);
-        Assert.assertEquals(source.height, target.height);
-        Assert.assertEquals(source.wealth, target.wealth);
+        Assert.assertEquals((int) source.age, target.age);
+        Assert.assertEquals(source.gender.value, target.gender);
+        Assert.assertTrue(BigDecimal.valueOf(source.height).compareTo(target.height) == 0);
+        Assert.assertTrue(source.wealth.compareTo(new BigDecimal(target.wealth)) == 0);
+
     }
 
     @Test
     public void testConvert() throws Exception {
         SourceBean source = new SourceBean("Peter", 34, Gender.MALE, 1.85, BigDecimal.valueOf(123456789.87654321));
 
-        TargetBean target = BeanUtils.convert(source, TargetBean.class);
+        BeanConverter converter = BeanConverterBuilder.create()
+                .registerConverter((TypeConverter<Gender, Integer>) Gender::getValue)
+                .registerConverter((TypeConverter<Double, BigDecimal>) BigDecimal::valueOf)
+                .registerConverter((TypeConverter<BigDecimal, String>) BigDecimal::toPlainString)
+                .build();
+
+        TargetBean target = converter.convert(source, TargetBean.class);
 
         Assert.assertEquals(source.name, target.name);
-        Assert.assertEquals(source.age, target.age);
-        Assert.assertEquals(source.gender, target.gender);
-        Assert.assertEquals(source.height, target.height);
-        Assert.assertEquals(source.wealth, target.wealth);
+        Assert.assertEquals((int) source.age, target.age);
+        Assert.assertEquals(source.gender.value, target.gender);
+        Assert.assertTrue(BigDecimal.valueOf(source.height).compareTo(target.height) == 0);
+        Assert.assertTrue(source.wealth.compareTo(new BigDecimal(target.wealth)) == 0);
     }
 
     private enum Gender {
-        MALE,
-        FEMALE
+        MALE(0),
+        FEMALE(1);
+        private final int value;
+
+        Gender(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
     }
 
     private static class SourceBean {
@@ -55,7 +78,7 @@ public class BeanUtilsTest {
 
         private BigDecimal wealth;
 
-        SourceBean(String name, Integer age, Gender gender, Double height, BigDecimal wealth) {
+        public SourceBean(String name, Integer age, Gender gender, Double height, BigDecimal wealth) {
             this.name = name;
             this.age = age;
             this.gender = gender;
@@ -107,18 +130,18 @@ public class BeanUtilsTest {
     private static class TargetBean {
         private String name;
 
-        private Integer age;
+        private int age;
 
-        private Gender gender;
+        private int gender;
 
-        private Double height;
+        private BigDecimal height;
 
-        private BigDecimal wealth;
+        private String wealth;
 
-        TargetBean() {
+        public TargetBean() {
         }
 
-        TargetBean(String name, Integer age, Gender gender, Double height, BigDecimal wealth) {
+        public TargetBean(String name, int age, int gender, BigDecimal height, String wealth) {
             this.name = name;
             this.age = age;
             this.gender = gender;
@@ -134,36 +157,37 @@ public class BeanUtilsTest {
             this.name = name;
         }
 
-        public Integer getAge() {
+        public int getAge() {
             return age;
         }
 
-        public void setAge(Integer age) {
+        public void setAge(int age) {
             this.age = age;
         }
 
-        public Gender getGender() {
+        public int getGender() {
             return gender;
         }
 
-        public void setGender(Gender gender) {
+        public void setGender(int gender) {
             this.gender = gender;
         }
 
-        public Double getHeight() {
+        public BigDecimal getHeight() {
             return height;
         }
 
-        public void setHeight(Double height) {
+        public void setHeight(BigDecimal height) {
             this.height = height;
         }
 
-        public BigDecimal getWealth() {
+        public String getWealth() {
             return wealth;
         }
 
-        public void setWealth(BigDecimal wealth) {
+        public void setWealth(String wealth) {
             this.wealth = wealth;
         }
     }
+
 }
