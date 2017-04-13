@@ -6,7 +6,7 @@
 
     <groupId>com.github.mottox</groupId>
     <artifactId>bean-utils</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0-SNAPSHOT</version>
     <name>BeanUtils</name>
     <url>https://github.com/MottoX/BeanUtils</url>
     <description>A wrapper for cglib BeanCopier for conversion between JavaBeans.</description>
@@ -35,6 +35,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
         <cglib.version>3.2.5</cglib.version>
+        <commons.lang3.version>3.5</commons.lang3.version>
+        <typetools.version>0.4.9</typetools.version>
         <junit.version>4.12</junit.version>
 
         <maven.source.plugin.version>3.0.1</maven.source.plugin.version>
@@ -51,11 +53,24 @@
         </dependency>
 
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons.lang3.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.jodah</groupId>
+            <artifactId>typetools</artifactId>
+            <version>${typetools.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <profiles>
