@@ -36,6 +36,7 @@
         <java.version>1.8</java.version>
         <cglib.version>3.2.5</cglib.version>
         <commons.lang3.version>3.5</commons.lang3.version>
+        <typetools.version>0.4.9</typetools.version>
         <junit.version>4.12</junit.version>
 
         <maven.source.plugin.version>3.0.1</maven.source.plugin.version>
@@ -58,11 +59,18 @@
         </dependency>
 
         <dependency>
+            <groupId>net.jodah</groupId>
+            <artifactId>typetools</artifactId>
+            <version>${typetools.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <profiles>

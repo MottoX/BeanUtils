@@ -1,7 +1,5 @@
 package com.github.mottox.util.bean;
 
-import java.lang.reflect.ParameterizedType;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -10,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ClassUtils;
 
+import net.jodah.typetools.TypeResolver;
 import net.sf.cglib.beans.BeanCopier;
 import net.sf.cglib.core.Converter;
 
@@ -119,7 +118,6 @@ public class BeanConverterImpl implements BeanConverter {
                     .collect(Collectors.groupingBy(ResolvedTypeConverter::getSourceType));
         }
 
-        @SuppressWarnings("unchecked")
         @Override
         public Object convert(Object value, Class targetType, Object context) {
             if (value == null) {
@@ -131,7 +129,8 @@ public class BeanConverterImpl implements BeanConverter {
             /*
              * Check if target type is assignable from source type.
              * If true, it's okay to copy property from source to target.
-             * Also note that the sourceType will be a wrapper data type if the original property is primitive data type
+             * Also note that the source type will be a wrapper data type if the original property is primitive data
+             * type
              * and java.lang.Class#isAssignableFrom returns false when using for primitive and wrapper data type,
              * it's a good idea to use ClassUtils from Apache Commons to simplify code.
              */
@@ -139,10 +138,21 @@ public class BeanConverterImpl implements BeanConverter {
                 return value;
             }
 
-            List<ResolvedTypeConverter> converters = converterMap.getOrDefault(sourceType, Collections.emptyList());
-            for (ResolvedTypeConverter converter : converters) {
-                if (ClassUtils.isAssignable(targetType, converter.getTargetType())) {
-                    return converter.convert(value);
+            //  Try to find mapping strategy from converters.
+            for (Map.Entry<Class, List<ResolvedTypeConverter>> entry : converterMap.entrySet()) {
+                Class converterSourceType = entry.getKey();
+                List<ResolvedTypeConverter> converters = entry.getValue();
+
+                // Determine if the source type of converter is assignable from the type of value
+                if (ClassUtils.isAssignable(sourceType, converterSourceType, true)) {
+                    for (ResolvedTypeConverter converter : converters) {
+                        // Determine if the target type to convert is assignable from the target type of converter
+                        if (ClassUtils.isAssignable(converter.getTargetType(), targetType, true)) {
+                            @SuppressWarnings("unchecked")
+                            Object result = converter.convert(value);
+                            return result;
+                        }
+                    }
                 }
             }
 
@@ -150,23 +160,10 @@ public class BeanConverterImpl implements BeanConverter {
             return null;
         }
 
+        @SuppressWarnings("unchecked")
         private <S, T> ResolvedTypeConverter<S, T> resolveTypeConverter(TypeConverter<S, T> converter) {
-            return new ResolvedTypeConverter<>(converter, resolveSourceType(converter), resolveTargetType(converter));
-        }
-
-        @SuppressWarnings("unchecked")
-        private <S> Class<S> resolveSourceType(TypeConverter<S, ?> converter) {
-            return (Class<S>) resolveGenericType(converter, 0);
-        }
-
-        @SuppressWarnings("unchecked")
-        private <T> Class<T> resolveTargetType(TypeConverter<?, T> converter) {
-            return ((Class<T>) resolveGenericType(converter, 1));
-        }
-
-        private Class<?> resolveGenericType(TypeConverter<?, ?> converter, int index) {
-            return (Class<?>) ((ParameterizedType) converter.getClass().getGenericInterfaces()[0])
-                    .getActualTypeArguments()[index];
+            Class<?>[] classes = TypeResolver.resolveRawArguments(TypeConverter.class, converter.getClass());
+            return new ResolvedTypeConverter<>(converter, (Class<S>) classes[0], (Class<T>) classes[1]);
         }
 
         /**
