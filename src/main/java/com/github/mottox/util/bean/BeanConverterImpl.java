@@ -54,9 +54,11 @@ public class BeanConverterImpl implements BeanConverter {
     private final Map<String, BeanCopier> beanCopierMap;
 
     /**
-     * Private constructor.
+     * Construct a new instance of {@link BeanConverter}.
+     *
+     * @param converters the provided type converters
      */
-    public BeanConverterImpl(List<TypeConverter<?, ?>> converters) {
+    BeanConverterImpl(List<TypeConverter<?, ?>> converters) {
         this.converter = new ConverterAdapter(converters);
         this.beanCopierMap = new ConcurrentHashMap<>();
     }
