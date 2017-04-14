@@ -134,12 +134,12 @@ public class BeanConverterImpl implements BeanConverter {
      */
     static class ConverterAdapter implements Converter {
 
-        private final Map<Class, List<ResolvedTypeConverter>> converterMap;
+        private final Map<Class, List<TypeResolvedConverter>> converterMap;
 
         ConverterAdapter(List<TypeConverter<?, ?>> converterMap) {
             this.converterMap = converterMap.stream()
-                    .map(this::resolveTypeConverter)
-                    .collect(Collectors.groupingBy(ResolvedTypeConverter::getSourceType));
+                    .map(this::resolveTypeOfConverter)
+                    .collect(Collectors.groupingBy(TypeResolvedConverter::getSourceType));
         }
 
         @Override
@@ -163,13 +163,13 @@ public class BeanConverterImpl implements BeanConverter {
             }
 
             //  Try to find mapping strategy from converters.
-            for (Map.Entry<Class, List<ResolvedTypeConverter>> entry : converterMap.entrySet()) {
+            for (Map.Entry<Class, List<TypeResolvedConverter>> entry : converterMap.entrySet()) {
                 Class converterSourceType = entry.getKey();
-                List<ResolvedTypeConverter> converters = entry.getValue();
+                List<TypeResolvedConverter> converters = entry.getValue();
 
                 // Determine if the source type of converter is assignable from the type of value
                 if (ClassUtils.isAssignable(sourceType, converterSourceType, true)) {
-                    for (ResolvedTypeConverter converter : converters) {
+                    for (TypeResolvedConverter converter : converters) {
                         // Determine if the target type to convert is assignable from the target type of converter
                         if (ClassUtils.isAssignable(converter.getTargetType(), targetType, true)) {
                             @SuppressWarnings("unchecked")
@@ -185,9 +185,9 @@ public class BeanConverterImpl implements BeanConverter {
         }
 
         @SuppressWarnings("unchecked")
-        private <S, T> ResolvedTypeConverter<S, T> resolveTypeConverter(TypeConverter<S, T> converter) {
+        private <S, T> TypeResolvedConverter<S, T> resolveTypeOfConverter(TypeConverter<S, T> converter) {
             Class<?>[] classes = TypeResolver.resolveRawArguments(TypeConverter.class, converter.getClass());
-            return new ResolvedTypeConverter<>(converter, (Class<S>) classes[0], (Class<T>) classes[1]);
+            return new TypeResolvedConverter<>(converter, (Class<S>) classes[0], (Class<T>) classes[1]);
         }
 
         /**
@@ -196,7 +196,7 @@ public class BeanConverterImpl implements BeanConverter {
          * @param <S> the source type
          * @param <T> the target type
          */
-        static class ResolvedTypeConverter<S, T> implements TypeConverter<S, T> {
+        static class TypeResolvedConverter<S, T> implements TypeConverter<S, T> {
 
             private final TypeConverter<S, T> delegatingConverter;
 
@@ -204,7 +204,7 @@ public class BeanConverterImpl implements BeanConverter {
 
             private final Class<T> targetType;
 
-            ResolvedTypeConverter(TypeConverter<S, T> delegatingConverter, Class<S> sourceType,
+            TypeResolvedConverter(TypeConverter<S, T> delegatingConverter, Class<S> sourceType,
                                   Class<T> targetType) {
                 this.delegatingConverter = delegatingConverter;
                 this.sourceType = sourceType;
