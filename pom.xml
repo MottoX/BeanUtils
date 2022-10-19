@@ -37,7 +37,7 @@
         <cglib.version>3.2.5</cglib.version>
         <commons.lang3.version>3.5</commons.lang3.version>
         <typetools.version>0.4.9</typetools.version>
-        <junit.version>4.12</junit.version>
+        <junit.version>4.13.1</junit.version>
 
         <maven.source.plugin.version>3.0.1</maven.source.plugin.version>
         <maven.javadoc.plugin.version>2.10.4</maven.javadoc.plugin.version>
